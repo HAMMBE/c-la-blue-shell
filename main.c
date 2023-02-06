@@ -236,8 +236,16 @@ int mysh_commands(char * args[]) {
         j++;
     }
 
-
-    if (strcmp(args[0],"exit") == 0) {
+    if (strcmp(args[0], "history") == 0) {
+        FILE *historyFile = fopen("history.txt", "r");
+        char historyLine[MAXCHARPERLINE];
+        int lineNumber = 1;
+        while (fgets(historyLine, MAXCHARPERLINE, historyFile) != NULL) {
+            printf("%d %s", lineNumber, historyLine);
+            lineNumber++;
+        }
+        fclose(historyFile);
+    } else if (strcmp(args[0],"exit") == 0 || strcmp(args[0],":qa") == 0) {
         exit(0);
     } else if (strcmp(args[0],"pwd") == 0) {
         if (args[j] != NULL) {
@@ -307,6 +315,19 @@ int mysh_commands(char * args[]) {
         mysh_start(args_aux, isRunningBg);
     }
     return 1;
+}
+
+int saveHistory(char* line) {
+    // History
+    FILE *historyFile;
+    historyFile = fopen("history.txt", "a");
+
+    memset(line, '\0', MAXCHARPERLINE);
+    fgets(line, MAXCHARPERLINE, stdin);
+    fprintf(historyFile, "%s", line);
+    fflush(historyFile);
+
+    fclose(historyFile);
 }
 
 int main(int argc, char *argv[], char **env) {
