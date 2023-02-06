@@ -65,8 +65,6 @@ int manageEnviron(char * args[], int option) {
                 printf("%s", "Variable not found\n");
             }
             break;
-
-
     }
     return 0;
 }
@@ -128,31 +126,25 @@ void mysh_IO(char * args[], char* inputFile, char* outputFile, int option) {
     waitpid(pid,NULL,0);
 }
 
-void mysh_perriPiperHandler(char * args[]) {
+void mysh_perriPiperHandler(char *args[]) {
     int filedes[2];
     int filedes2[2];
-
-    int num_cmds = 0;
 
     char *command[256];
 
     pid_t pid;
 
     int error = -1;
-    int end = 0;
 
-    int i = 0;
-    int j = 0;
-    int k = 0;
-    int l = 0;
+    int commandsNumber, end, i, j, k, l = 0;
 
     while (args[l] != NULL) {
         if (strcmp(args[l],"|") == 0) {
-            num_cmds++;
+            commandsNumber++;
         }
         l++;
     }
-    num_cmds++;
+    commandsNumber++;
 
     while (args[j] != NULL && end != 1) {
         k = 0;
@@ -181,7 +173,7 @@ void mysh_perriPiperHandler(char * args[]) {
         pid = fork();
 
         if (pid == -1) {
-            if (i != num_cmds - 1) {
+            if (i != commandsNumber - 1) {
                 if (i % 2 != 0) {
                     close(filedes[1]);
                 } else {
@@ -194,8 +186,8 @@ void mysh_perriPiperHandler(char * args[]) {
         if (pid == 0) {
             if (i == 0) {
                 dup2(filedes2[1], STDOUT_FILENO);
-            } else if (i == num_cmds - 1) {
-                if (num_cmds % 2 != 0) {
+            } else if (i == commandsNumber - 1) {
+                if (commandsNumber % 2 != 0) {
                     dup2(filedes[0],STDIN_FILENO);
                 } else {
                     dup2(filedes2[0],STDIN_FILENO);
@@ -217,8 +209,8 @@ void mysh_perriPiperHandler(char * args[]) {
 
         if (i == 0) {
             close(filedes2[1]);
-        } else if (i == num_cmds - 1) {
-            if (num_cmds % 2 != 0) {
+        } else if (i == commandsNumber - 1) {
+            if (commandsNumber % 2 != 0) {
                 close(filedes[0]);
             } else {
                 close(filedes2[0]);
@@ -250,7 +242,9 @@ int commandHandler(char * args[]) {
     char *args_aux[256];
 
     while (args[j] != NULL) {
-        if ((strcmp(args[j],">") == 0) || (strcmp(args[j],"<") == 0) || (strcmp(args[j],"&") == 0)){
+        if ((strcmp(args[j],"<") == 0)
+        || (strcmp(args[j],">") == 0)
+        || (strcmp(args[j],"&") == 0)) {
             break;
         }
         args_aux[j] = args[j];
@@ -260,8 +254,7 @@ int commandHandler(char * args[]) {
 
     if (strcmp(args[0],"exit") == 0) {
         exit(0);
-    }
-    else if (strcmp(args[0],"pwd") == 0) {
+    } else if (strcmp(args[0],"pwd") == 0) {
         if (args[j] != NULL) {
             if ((strcmp(args[j],">") == 0) && (args[j+1] != NULL)) {
                 fileDescriptor = open(args[j+1], O_CREAT | O_TRUNC | O_WRONLY, 0600);
@@ -276,14 +269,11 @@ int commandHandler(char * args[]) {
         } else {
             printf("%s\n", getcwd(currentDirectory, 1024));
         }
-    }
-    else if (strcmp(args[0],"clear") == 0) {
+    } else if (strcmp(args[0],"clear") == 0) {
         system("clear");
-    }
-    else if (strcmp(args[0],"cd") == 0) {
+    } else if (strcmp(args[0],"cd") == 0) {
         mysh_cd(args);
-    }
-    else if (strcmp(args[0],"environ") == 0) {
+    } else if (strcmp(args[0],"environ") == 0) {
         if (args[j] != NULL) {
             if ((strcmp(args[j],">") == 0) && (args[j+1] != NULL)) {
                 fileDescriptor = open(args[j+1], O_CREAT | O_TRUNC | O_WRONLY, 0600);
@@ -296,11 +286,9 @@ int commandHandler(char * args[]) {
         } else {
             manageEnviron(args,0);
         }
-    }
-    else if (strcmp(args[0],"setenv") == 0) {
+    } else if (strcmp(args[0],"setenv") == 0) {
         manageEnviron(args, 1);
-    }
-    else if (strcmp(args[0],"unsetenv") == 0) {
+    } else if (strcmp(args[0],"unsetenv") == 0) {
         manageEnviron(args,2);
     } else {
         while (args[i] != NULL && background == 0) {
@@ -310,7 +298,7 @@ int commandHandler(char * args[]) {
                 mysh_perriPiperHandler(args);
                 return 1;
             } else if (strcmp(args[i],"<") == 0) {
-                aux = i+1;
+                aux = i + 1;
                 if (args[aux] == NULL || args[aux+1] == NULL || args[aux+2] == NULL) {
                     printf("Not enough input arguments\n");
                     return -1;
@@ -338,19 +326,21 @@ int commandHandler(char * args[]) {
     return 1;
 }
 
-int main(int argc, char *argv[], char **envp) {
+int main(int argc, char *argv[], char **env) {
     char line[MAXCHARPERLINE];
     char *tokens[TOKENMAX];
     int numTokens;
 
     no_reprint_prmpt = 0;
     pid = -10;
-    environ = envp;
+    environ = env;
 
     setenv("shell",getcwd(currentDirectory, 1024), 1);
 
     while (TRUE) {
-        if (no_reprint_prmpt == 0) mysh_displayShell();
+        if (no_reprint_prmpt == 0) {
+            mysh_displayShell();
+        }
         no_reprint_prmpt = 0;
 
         memset(line, '\0', MAXCHARPERLINE);
