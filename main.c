@@ -8,13 +8,6 @@
 #include <fcntl.h>
 #include "main.h"
 
-
-void mysh_displayShell() {
-    char hostn[1204] = "";
-    gethostname(hostn, sizeof(hostn));
-    printf("%s@%s %s > ", getenv("LOGNAME"), hostn, getcwd(currentDirectory, 1024));
-}
-
 int mysh_cd(char* args[]) {
     if (args[1] == NULL) {
         chdir(getenv("HOME"));
@@ -339,7 +332,9 @@ int main(int argc, char *argv[], char **env) {
 
     while (TRUE) {
         if (no_reprint_prmpt == 0) {
-            mysh_displayShell();
+            char hostn[1204] = "";
+            gethostname(hostn, sizeof(hostn));
+            printf("%s@%s %s > ", getenv("LOGNAME"), hostn, getcwd(currentDirectory, 1024));
         }
         no_reprint_prmpt = 0;
 
