@@ -250,7 +250,7 @@ int commandHandler(char * args[]) {
 
 
     if (strcmp(args[0],"echo") == 0) {
-        printf("%s", args[1]);
+        printf("%s\n", args[1]);
     }
     else if (strcmp(args[0],"exit") == 0 || strcmp(args[0],":qa") == 0) {
         exit(0);
