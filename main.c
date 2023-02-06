@@ -219,6 +219,41 @@ void mysh_perriPiperHandler(char *args[]) {
     }
 }
 
+void saveHistory(char line[MAXCHARPERLINE]) {
+    line[strlen(line) - 1] = '\0';
+    // History
+    FILE *historyFile = fopen(HISTORY_FILE, "a");
+
+    if (historyFile == NULL) {
+        printf("Error: Could not open history file\n");
+        return;
+    }
+
+    fprintf(historyFile, "%s\n", line);
+    fclose(historyFile);
+}
+
+void showHistory() {
+    FILE *historyFile = fopen(HISTORY_FILE, "r");
+    char historyLine[MAXCHARPERLINE];
+    int lineNumber = 1;
+    while (fgets(historyLine, MAXCHARPERLINE, historyFile) != NULL) {
+        printf("%d %s", lineNumber, historyLine);
+        lineNumber++;
+    }
+    fclose(historyFile);
+}
+
+void clearHistory() {
+    FILE *historyFile = fopen(HISTORY_FILE, "w");
+    if (historyFile == NULL) {
+        perror("Error opening file");
+        exit(1);
+    }
+
+    fclose(historyFile);
+}
+
 int mysh_commands(char *args[]) {
     int fileDesc;
     int stdOut;
@@ -239,14 +274,9 @@ int mysh_commands(char *args[]) {
     }
 
     if (strcmp(args[0], "history") == 0) {
-        FILE *historyFile = fopen("history.txt", "r");
-        char historyLine[MAXCHARPERLINE];
-        int lineNumber = 1;
-        while (fgets(historyLine, MAXCHARPERLINE, historyFile) != NULL) {
-            printf("%d %s", lineNumber, historyLine);
-            lineNumber++;
-        }
-        fclose(historyFile);
+        showHistory();
+    } else if (strcmp(args[0], "clearHistory") == 0) {
+        clearHistory();
     } else if (strcmp(args[0],"exit") == 0 || strcmp(args[0],":qa") == 0) {
         exit(0);
     } else if (strcmp(args[0],"pwd") == 0) {
@@ -318,17 +348,6 @@ int mysh_commands(char *args[]) {
     }
     return 1;
 }
-void saveHistory(char line[MAXCHARPERLINE]) {
-    // History
-    FILE *historyFile;
-    historyFile = fopen("history.txt", "a");
-
-    memset(line, '\0', MAXCHARPERLINE);
-    fprintf(historyFile, "%s", line);
-    fflush(historyFile);
-
-    fclose(historyFile);
-}
 
 int main(int argc, char *argv[], char **env) {
     char line[MAXCHARPERLINE];
@@ -351,6 +370,7 @@ int main(int argc, char *argv[], char **env) {
 
         memset(line, '\0', MAXCHARPERLINE);
         fgets(line, MAXCHARPERLINE, stdin);
+        saveHistory(line);
 
         if ((tokens[0] = strtok(line," \n\t")) == NULL) {
             continue;
@@ -361,9 +381,7 @@ int main(int argc, char *argv[], char **env) {
             numTokens++;
         }
         mysh_commands(tokens);
-        saveHistory(line);
     }
 
     exit(0);
 }
-
