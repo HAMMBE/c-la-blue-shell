@@ -248,11 +248,12 @@ int commandHandler(char * args[]) {
         j++;
     }
 
-
+/*
     if (strcmp(args[0],"echo") == 0) {
         printf("%s\n", args[1]);
     }
-    else if (strcmp(args[0],"exit") == 0 || strcmp(args[0],":qa") == 0) {
+    else */
+    if (strcmp(args[0],"exit") == 0 || strcmp(args[0],":qa") == 0) {
         exit(0);
     }
     else if (strcmp(args[0],"pwd") == 0) {
