@@ -230,7 +230,6 @@ int mysh_commands(char * args[]) {
         if ((strcmp(args[j],"<") == 0)
         || (strcmp(args[j],">") == 0)
         || (strcmp(args[j],"&") == 0)) {
-            printf("%s", "Not implemented, because it has never worked");
             break;
         }
         args_aux[j] = args[j];
