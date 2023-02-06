@@ -8,20 +8,40 @@
 #include <fcntl.h>
 #include "main.h"
 
-int mysh_cd(char* args[]) {
-    if (args[1] == NULL) {
-        chdir(getenv("HOME"));
-        return 1;
-    } else {
-        if (chdir(args[1]) == -1) {
-            printf(" %s: no such directory in file\n", args[1]);
-            return -1;
+void mysh_IO(char * args[], char* inputFile, char* outputFile, int option) {
+    int error = -1;
+    int fileDescriptor;
+
+    if ((pid=fork()) == -1) {
+        printf("Child not created\n");
+        return;
+    }
+    if (pid == 0) {
+
+        if (option == 0) {
+            fileDescriptor = open(outputFile, O_CREAT | O_TRUNC | O_WRONLY, 0600);
+            dup2(fileDescriptor, STDOUT_FILENO);
+            close(fileDescriptor);
+        } else if (option == 1) {
+            fileDescriptor = open(inputFile, O_RDONLY, 0600);
+            dup2(fileDescriptor, STDIN_FILENO);
+            close(fileDescriptor);
+            fileDescriptor = open(outputFile, O_CREAT | O_TRUNC | O_WRONLY, 0600);
+            dup2(fileDescriptor, STDOUT_FILENO);
+            close(fileDescriptor);
+        }
+
+        setenv("parent",getcwd(currentDirectory, 1024),1);
+
+        if (execvp(args[0],args) == error) {
+            printf("error");
+            kill(getpid(),SIGTERM);
         }
     }
-    return 0;
+    waitpid(pid,NULL,0);
 }
 
-int manageEnviron(char * args[], int option) {
+int mysh_env(char * args[], int option) {
     char **env_aux;
     switch(option) {
         case 0:
@@ -86,37 +106,17 @@ void mysh_start(char **args, int background) {
     }
 }
 
-void mysh_IO(char * args[], char* inputFile, char* outputFile, int option) {
-    int error = -1;
-    int fileDescriptor;
-
-    if ((pid=fork()) == -1) {
-        printf("Child not created\n");
-        return;
-    }
-    if (pid == 0) {
-
-        if (option == 0) {
-            fileDescriptor = open(outputFile, O_CREAT | O_TRUNC | O_WRONLY, 0600);
-            dup2(fileDescriptor, STDOUT_FILENO);
-            close(fileDescriptor);
-        } else if (option == 1) {
-            fileDescriptor = open(inputFile, O_RDONLY, 0600);
-            dup2(fileDescriptor, STDIN_FILENO);
-            close(fileDescriptor);
-            fileDescriptor = open(outputFile, O_CREAT | O_TRUNC | O_WRONLY, 0600);
-            dup2(fileDescriptor, STDOUT_FILENO);
-            close(fileDescriptor);
-        }
-
-        setenv("parent",getcwd(currentDirectory, 1024),1);
-
-        if (execvp(args[0],args) == error) {
-            printf("error");
-            kill(getpid(),SIGTERM);
+int mysh_cd(char* args[]) {
+    if (args[1] == NULL) {
+        chdir(getenv("HOME"));
+        return 1;
+    } else {
+        if (chdir(args[1]) == -1) {
+            printf(" %s: no such directory in file\n", args[1]);
+            return -1;
         }
     }
-    waitpid(pid,NULL,0);
+    return 0;
 }
 
 void mysh_perriPiperHandler(char *args[]) {
@@ -222,16 +222,13 @@ void mysh_perriPiperHandler(char *args[]) {
     }
 }
 
-int commandHandler(char * args[]) {
+int mysh_commands(char * args[]) {
+    int fileDesc;
+    int stdOut;
     int i = 0;
     int j = 0;
-
-    int fileDescriptor;
-    int standardOut;
-
     int aux;
-    int background = 0;
-
+    int isRunningBg = 0;
     char *args_aux[256];
 
     while (args[j] != NULL) {
@@ -251,14 +248,12 @@ int commandHandler(char * args[]) {
     } else if (strcmp(args[0],"pwd") == 0) {
         if (args[j] != NULL) {
             if ((strcmp(args[j],">") == 0) && (args[j+1] != NULL)) {
-                fileDescriptor = open(args[j+1], O_CREAT | O_TRUNC | O_WRONLY, 0600);
-                // We replace de standard output with the appropriate file
-                standardOut = dup(STDOUT_FILENO); 	// first we make a copy of stdout
-                // because we'll want it back
-                dup2(fileDescriptor, STDOUT_FILENO);
-                close(fileDescriptor);
+                fileDesc = open(args[j + 1], O_CREAT | O_TRUNC | O_WRONLY, 0600);
+                stdOut = dup(STDOUT_FILENO);
+                dup2(fileDesc, STDOUT_FILENO);
+                close(fileDesc);
                 printf("%s\n", getcwd(currentDirectory, 1024));
-                dup2(standardOut, STDOUT_FILENO);
+                dup2(stdOut, STDOUT_FILENO);
             }
         } else {
             printf("%s\n", getcwd(currentDirectory, 1024));
@@ -267,27 +262,27 @@ int commandHandler(char * args[]) {
         system("clear");
     } else if (strcmp(args[0],"cd") == 0) {
         mysh_cd(args);
-    } else if (strcmp(args[0],"environ") == 0) {
+    } else if (strcmp(args[0],"listenv") == 0) {
         if (args[j] != NULL) {
             if ((strcmp(args[j],">") == 0) && (args[j+1] != NULL)) {
-                fileDescriptor = open(args[j+1], O_CREAT | O_TRUNC | O_WRONLY, 0600);
-                standardOut = dup(STDOUT_FILENO);
-                dup2(fileDescriptor, STDOUT_FILENO);
-                close(fileDescriptor);
-                manageEnviron(args,0);
-                dup2(standardOut, STDOUT_FILENO);
+                fileDesc = open(args[j + 1], O_CREAT | O_TRUNC | O_WRONLY, 0600);
+                stdOut = dup(STDOUT_FILENO);
+                dup2(fileDesc, STDOUT_FILENO);
+                close(fileDesc);
+                mysh_env(args, 0);
+                dup2(stdOut, STDOUT_FILENO);
             }
         } else {
-            manageEnviron(args,0);
+            mysh_env(args, 0);
         }
     } else if (strcmp(args[0],"setenv") == 0) {
-        manageEnviron(args, 1);
+        mysh_env(args, 1);
     } else if (strcmp(args[0],"unsetenv") == 0) {
-        manageEnviron(args,2);
+        mysh_env(args, 2);
     } else {
-        while (args[i] != NULL && background == 0) {
+        while (args[i] != NULL && isRunningBg == 0) {
             if (strcmp(args[i],"&") == 0) {
-                background = 1;
+                isRunningBg = 1;
             } else if (strcmp(args[i],"|") == 0) {
                 mysh_perriPiperHandler(args);
                 return 1;
@@ -315,7 +310,7 @@ int commandHandler(char * args[]) {
             i++;
         }
         args_aux[i] = NULL;
-        mysh_start(args_aux, background);
+        mysh_start(args_aux, isRunningBg);
     }
     return 1;
 }
@@ -350,7 +345,7 @@ int main(int argc, char *argv[], char **env) {
         while ((tokens[numTokens] = strtok(NULL, " \n\t")) != NULL) {
             numTokens++;
         }
-        commandHandler(tokens);
+        mysh_commands(tokens);
     }
 
     exit(0);
