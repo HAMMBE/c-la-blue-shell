@@ -8,6 +8,8 @@
 #include <fcntl.h>
 #include "main.h"
 
+void saveHistory(char line[1024]);
+
 void mysh_IO(char * args[], char* inputFile, char* outputFile, int option) {
     int error = -1;
     int fileDescriptor;
@@ -217,7 +219,7 @@ void mysh_perriPiperHandler(char *args[]) {
     }
 }
 
-int mysh_commands(char * args[]) {
+int mysh_commands(char *args[]) {
     int fileDesc;
     int stdOut;
     int i = 0;
@@ -316,8 +318,7 @@ int mysh_commands(char * args[]) {
     }
     return 1;
 }
-
-int saveHistory(char* line) {
+void saveHistory(char line[MAXCHARPERLINE]) {
     // History
     FILE *historyFile;
     historyFile = fopen("history.txt", "a");
@@ -361,7 +362,9 @@ int main(int argc, char *argv[], char **env) {
             numTokens++;
         }
         mysh_commands(tokens);
+        saveHistory(line);
     }
 
     exit(0);
 }
+
