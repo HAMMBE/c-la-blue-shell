@@ -9,18 +9,17 @@
 #include "main.h"
 
 
-void mysh_displayShell(){
+void mysh_displayShell() {
     char hostn[1204] = "";
     gethostname(hostn, sizeof(hostn));
     printf("%s@%s %s > ", getenv("LOGNAME"), hostn, getcwd(currentDirectory, 1024));
 }
 
-int mysh_cd(char* args[]){
+int mysh_cd(char* args[]) {
     if (args[1] == NULL) {
         chdir(getenv("HOME"));
         return 1;
-    }
-    else{
+    } else {
         if (chdir(args[1]) == -1) {
             printf(" %s: no such directory in file\n", args[1]);
             return -1;
@@ -29,40 +28,40 @@ int mysh_cd(char* args[]){
     return 0;
 }
 
-int manageEnviron(char * args[], int option){
+int manageEnviron(char * args[], int option) {
     char **env_aux;
-    switch(option){
+    switch(option) {
         case 0:
-            for(env_aux = environ; *env_aux != 0; env_aux ++){
+            for(env_aux = environ; *env_aux != 0; env_aux ++) {
                 printf("%s\n", *env_aux);
             }
             break;
         case 1:
-            if((args[1] == NULL) && args[2] == NULL){
+            if ((args[1] == NULL) && args[2] == NULL) {
                 printf("%s","Not enough input arguments\n");
                 return -1;
             }
-            if(getenv(args[1]) != NULL){
+            if (getenv(args[1]) != NULL) {
                 printf("%s", "The variable has been overwritten\n");
-            }else{
+            } else {
                 printf("%s", "The variable has been created\n");
             }
 
-            if (args[2] == NULL){
+            if (args[2] == NULL) {
                 setenv(args[1], "", 1);
-            }else{
+            } else {
                 setenv(args[1], args[2], 1);
             }
             break;
         case 2:
-            if(args[1] == NULL){
+            if(args[1] == NULL) {
                 printf("%s","Missing arguments\n");
                 return -1;
             }
-            if(getenv(args[1]) != NULL){
+            if (getenv(args[1]) != NULL) {
                 unsetenv(args[1]);
                 printf("%s", "The variable has been deleted\n");
-            }else{
+            } else {
                 printf("%s", "Variable not found\n");
             }
             break;
@@ -75,12 +74,12 @@ int manageEnviron(char * args[], int option){
 void mysh_start(char **args, int background) {
     int error = -1;
 
-    if((pid=fork()) == -1) {
+    if ((pid = fork()) == -1) {
         printf("Child process not created\n");
         return;
     }
 
-    if(pid==0) {
+    if (pid == 0) {
         signal(SIGINT, SIG_IGN);
         setenv("parent",getcwd(currentDirectory, 1024),1);
         if (execvp(args[0],args) == error) {
@@ -96,19 +95,17 @@ void mysh_start(char **args, int background) {
     }
 }
 
-void mysh_IO(char * args[], char* inputFile, char* outputFile, int option){
-
+void mysh_IO(char * args[], char* inputFile, char* outputFile, int option) {
     int error = -1;
-
     int fileDescriptor;
 
-    if((pid=fork()) == -1) {
+    if ((pid=fork()) == -1) {
         printf("Child not created\n");
         return;
     }
-    if(pid == 0) {
+    if (pid == 0) {
 
-        if (option == 0){
+        if (option == 0) {
             fileDescriptor = open(outputFile, O_CREAT | O_TRUNC | O_WRONLY, 0600);
             dup2(fileDescriptor, STDOUT_FILENO);
             close(fileDescriptor);
@@ -141,7 +138,7 @@ void mysh_perriPiperHandler(char * args[]) {
 
     pid_t pid;
 
-    int err = -1;
+    int error = -1;
     int end = 0;
 
     int i = 0;
@@ -160,10 +157,10 @@ void mysh_perriPiperHandler(char * args[]) {
     while (args[j] != NULL && end != 1) {
         k = 0;
 
-        while (strcmp(args[j],"|") != 0){
+        while (strcmp(args[j],"|") != 0) {
             command[k] = args[j];
             j++;
-            if (args[j] == NULL){
+            if (args[j] == NULL) {
 
                 end = 1;
                 k++;
@@ -175,76 +172,72 @@ void mysh_perriPiperHandler(char * args[]) {
         command[k] = NULL;
         j++;
 
-        if (i % 2 != 0){
+        if (i % 2 != 0) {
             pipe(filedes);
-        }else{
+        } else {
             pipe(filedes2);
         }
 
-        pid=fork();
+        pid = fork();
 
-        if(pid==-1){
-            if (i != num_cmds - 1){
-                if (i % 2 != 0){
+        if (pid == -1) {
+            if (i != num_cmds - 1) {
+                if (i % 2 != 0) {
                     close(filedes[1]);
-                }else{
+                } else {
                     close(filedes2[1]);
                 }
             }
             printf("Creation of child process failed\n");
             return;
         }
-        if(pid==0){
-            if (i == 0){
+        if (pid == 0) {
+            if (i == 0) {
                 dup2(filedes2[1], STDOUT_FILENO);
-            }
-            else if (i == num_cmds - 1){
-                if (num_cmds % 2 != 0){
+            } else if (i == num_cmds - 1) {
+                if (num_cmds % 2 != 0) {
                     dup2(filedes[0],STDIN_FILENO);
-                }else{
+                } else {
                     dup2(filedes2[0],STDIN_FILENO);
                 }
-            }else{
-                if (i % 2 != 0){
+            } else {
+                if (i % 2 != 0) {
                     dup2(filedes2[0],STDIN_FILENO);
                     dup2(filedes[1],STDOUT_FILENO);
-                }else{
+                } else {
                     dup2(filedes[0],STDIN_FILENO);
                     dup2(filedes2[1],STDOUT_FILENO);
                 }
             }
 
-            if (execvp(command[0],command)==err){
+            if (execvp(command[0],command) == error) {
                 kill(getpid(),SIGTERM);
             }
         }
 
-        if (i == 0){
+        if (i == 0) {
             close(filedes2[1]);
-        }
-        else if (i == num_cmds - 1){
-            if (num_cmds % 2 != 0){
+        } else if (i == num_cmds - 1) {
+            if (num_cmds % 2 != 0) {
                 close(filedes[0]);
-            }else{
+            } else {
                 close(filedes2[0]);
             }
-        }else{
-            if (i % 2 != 0){
+        } else {
+            if (i % 2 != 0) {
                 close(filedes2[0]);
                 close(filedes[1]);
-            }else{
+            } else {
                 close(filedes[0]);
                 close(filedes2[1]);
             }
         }
-
         waitpid(pid,NULL,0);
-
         i++;
     }
 }
 
-int commandHandler(char * args[]){
+int commandHandler(char * args[]) {
     int i = 0;
     int j = 0;
 
@@ -256,8 +249,8 @@ int commandHandler(char * args[]){
 
     char *args_aux[256];
 
-    while ( args[j] != NULL){
-        if ( (strcmp(args[j],">") == 0) || (strcmp(args[j],"<") == 0) || (strcmp(args[j],"&") == 0)){
+    while (args[j] != NULL) {
+        if ((strcmp(args[j],">") == 0) || (strcmp(args[j],"<") == 0) || (strcmp(args[j],"&") == 0)){
             break;
         }
         args_aux[j] = args[j];
@@ -265,12 +258,12 @@ int commandHandler(char * args[]){
     }
 
 
-    if(strcmp(args[0],"exit") == 0) {
+    if (strcmp(args[0],"exit") == 0) {
         exit(0);
     }
-    else if (strcmp(args[0],"pwd") == 0){
-        if (args[j] != NULL){
-            if ( (strcmp(args[j],">") == 0) && (args[j+1] != NULL) ){
+    else if (strcmp(args[0],"pwd") == 0) {
+        if (args[j] != NULL) {
+            if ((strcmp(args[j],">") == 0) && (args[j+1] != NULL)) {
                 fileDescriptor = open(args[j+1], O_CREAT | O_TRUNC | O_WRONLY, 0600);
                 // We replace de standard output with the appropriate file
                 standardOut = dup(STDOUT_FILENO); 	// first we make a copy of stdout
@@ -280,7 +273,7 @@ int commandHandler(char * args[]){
                 printf("%s\n", getcwd(currentDirectory, 1024));
                 dup2(standardOut, STDOUT_FILENO);
             }
-        }else{
+        } else {
             printf("%s\n", getcwd(currentDirectory, 1024));
         }
     }
@@ -291,8 +284,8 @@ int commandHandler(char * args[]){
         mysh_cd(args);
     }
     else if (strcmp(args[0],"environ") == 0) {
-        if (args[j] != NULL){
-            if ( (strcmp(args[j],">") == 0) && (args[j+1] != NULL) ){
+        if (args[j] != NULL) {
+            if ((strcmp(args[j],">") == 0) && (args[j+1] != NULL)) {
                 fileDescriptor = open(args[j+1], O_CREAT | O_TRUNC | O_WRONLY, 0600);
                 standardOut = dup(STDOUT_FILENO);
                 dup2(fileDescriptor, STDOUT_FILENO);
@@ -300,7 +293,7 @@ int commandHandler(char * args[]){
                 manageEnviron(args,0);
                 dup2(standardOut, STDOUT_FILENO);
             }
-        }else{
+        } else {
             manageEnviron(args,0);
         }
     }
@@ -309,20 +302,19 @@ int commandHandler(char * args[]){
     }
     else if (strcmp(args[0],"unsetenv") == 0) {
         manageEnviron(args,2);
-    }
-    else {
-        while (args[i] != NULL && background == 0){
-            if (strcmp(args[i],"&") == 0){
+    } else {
+        while (args[i] != NULL && background == 0) {
+            if (strcmp(args[i],"&") == 0) {
                 background = 1;
-            }else if (strcmp(args[i],"|") == 0){
+            } else if (strcmp(args[i],"|") == 0) {
                 mysh_perriPiperHandler(args);
                 return 1;
-            }else if (strcmp(args[i],"<") == 0){
+            } else if (strcmp(args[i],"<") == 0) {
                 aux = i+1;
-                if (args[aux] == NULL || args[aux+1] == NULL || args[aux+2] == NULL ){
+                if (args[aux] == NULL || args[aux+1] == NULL || args[aux+2] == NULL) {
                     printf("Not enough input arguments\n");
                     return -1;
-                }else{
+                } else {
                     if (strcmp(args[aux+1],">") != 0){
                         printf("Usage: Expected '>' and found %s\n",args[aux+1]);
                         return -2;
@@ -330,9 +322,8 @@ int commandHandler(char * args[]){
                 }
                 mysh_IO(args_aux, args[i + 1], args[i + 3], 1);
                 return 1;
-            }
-            else if (strcmp(args[i],">") == 0){
-                if (args[i+1] == NULL){
+            } else if (strcmp(args[i],">") == 0) {
+                if (args[i+1] == NULL) {
                     printf("Not enough input arguments\n");
                     return -1;
                 }
@@ -347,30 +338,32 @@ int commandHandler(char * args[]){
     return 1;
 }
 
-int main(int argc, char *argv[], char ** envp) {
+int main(int argc, char *argv[], char **envp) {
     char line[MAXCHARPERLINE];
-    char * tokens[TOKENMAX];
+    char *tokens[TOKENMAX];
     int numTokens;
 
     no_reprint_prmpt = 0;
     pid = -10;
     environ = envp;
 
-    setenv("shell",getcwd(currentDirectory, 1024),1);
+    setenv("shell",getcwd(currentDirectory, 1024), 1);
 
-    while(TRUE){
+    while (TRUE) {
         if (no_reprint_prmpt == 0) mysh_displayShell();
         no_reprint_prmpt = 0;
 
-        memset (line, '\0', MAXCHARPERLINE );
-
+        memset(line, '\0', MAXCHARPERLINE);
         fgets(line, MAXCHARPERLINE, stdin);
 
-        if((tokens[0] = strtok(line," \n\t")) == NULL) continue;
+        if ((tokens[0] = strtok(line," \n\t")) == NULL) {
+            continue;
+        }
 
         numTokens = 1;
-        while((tokens[numTokens] = strtok(NULL, " \n\t")) != NULL) numTokens++;
-
+        while ((tokens[numTokens] = strtok(NULL, " \n\t")) != NULL) {
+            numTokens++;
+        }
         commandHandler(tokens);
     }
 
