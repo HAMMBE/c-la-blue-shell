@@ -354,6 +354,9 @@ int main(int argc, char *argv[], char **env) {
     char *tokens[TOKENMAX];
     int numTokens;
 
+    int konamiIndex = 0;
+    const char *konamiCode[10] = { "u", "u", "d", "d", "l", "r", "l", "r", "b", "a" };
+
     no_reprint_prmpt = 0;
     pid = -10;
     environ = env;
@@ -380,8 +383,18 @@ int main(int argc, char *argv[], char **env) {
         while ((tokens[numTokens] = strtok(NULL, " \n\t")) != NULL) {
             numTokens++;
         }
+
+        if (strcmp(tokens[0], konamiCode[konamiIndex]) == 0) {
+            konamiIndex++;
+            if (konamiIndex == 10) {
+                printf("Konami Code activated!\n");
+                konamiIndex = 0;
+            }
+        } else {
+            konamiIndex = 0;
+        }
+
         mysh_commands(tokens);
     }
-
     exit(0);
 }
