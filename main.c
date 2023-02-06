@@ -36,41 +36,41 @@ void mysh_start(char **args, int background) {
 // Manage all environment variables commands
 int mysh_env(char * args[], int option) {
     char **env_aux;
-    switch(option) {
-        case 0: // list variables
-            for(env_aux = environ; *env_aux != 0; env_aux ++) {
-                printf("%s\n", *env_aux);
-            }
-            break;
-        case 1: // set variable
-            if ((args[1] == NULL) && args[2] == NULL) {
-                printf("%s","Not enough input arguments\n");
-                return -1;
-            }
-            if (getenv(args[1]) != NULL) {
-                printf("%s", "The variable has been overwritten\n");
-            } else {
-                printf("%s", "The variable has been created\n");
-            }
 
-            if (args[2] == NULL) {
-                setenv(args[1], "", 1);
-            } else {
-                setenv(args[1], args[2], 1);
-            }
-            break;
-        case 2: // unset variable
-            if(args[1] == NULL) {
-                printf("%s","Missing arguments\n");
-                return -1;
-            }
-            if (getenv(args[1]) != NULL) {
-                unsetenv(args[1]);
-                printf("%s", "The variable has been deleted\n");
-            } else {
-                printf("%s", "Variable not found\n");
-            }
-            break;
+    if (option == 0) {
+        // list variables
+        for(env_aux = environ; *env_aux != 0; env_aux ++) {
+            printf("%s\n", *env_aux);
+        }
+    } else if (option == 1) {
+        // set variable
+        if ((args[1] == NULL) && args[2] == NULL) {
+            printf("%s","Not enough input arguments\n");
+            return -1;
+        }
+        if (getenv(args[1]) != NULL) {
+            printf("%s", "The variable has been overwritten\n");
+        } else {
+            printf("%s", "The variable has been created\n");
+        }
+
+        if (args[2] == NULL) {
+            setenv(args[1], "", 1);
+        } else {
+            setenv(args[1], args[2], 1);
+        }
+    } else if (option == 2) {
+        // unset variable
+        if(args[1] == NULL) {
+            printf("%s","Missing arguments\n");
+            return -1;
+        }
+        if (getenv(args[1]) != NULL) {
+            unsetenv(args[1]);
+            printf("%s", "The variable has been deleted\n");
+        } else {
+            printf("%s", "Variable not found\n");
+        }
     }
     return 0;
 }
