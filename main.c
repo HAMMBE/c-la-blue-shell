@@ -8,59 +8,6 @@
 #include <fcntl.h>
 #include "main.h"
 
-int mysh_cd(char* args[]) {
-    if (args[1] == NULL) {
-        chdir(getenv("HOME"));
-        return 1;
-    } else {
-        if (chdir(args[1]) == -1) {
-            printf(" %s: no such directory in file\n", args[1]);
-            return -1;
-        }
-    }
-    return 0;
-}
-
-int manageEnviron(char * args[], int option) {
-    char **env_aux;
-    switch(option) {
-        case 0:
-            for(env_aux = environ; *env_aux != 0; env_aux ++) {
-                printf("%s\n", *env_aux);
-            }
-            break;
-        case 1:
-            if ((args[1] == NULL) && args[2] == NULL) {
-                printf("%s","Not enough input arguments\n");
-                return -1;
-            }
-            if (getenv(args[1]) != NULL) {
-                printf("%s", "The variable has been overwritten\n");
-            } else {
-                printf("%s", "The variable has been created\n");
-            }
-
-            if (args[2] == NULL) {
-                setenv(args[1], "", 1);
-            } else {
-                setenv(args[1], args[2], 1);
-            }
-            break;
-        case 2:
-            if(args[1] == NULL) {
-                printf("%s","Missing arguments\n");
-                return -1;
-            }
-            if (getenv(args[1]) != NULL) {
-                unsetenv(args[1]);
-                printf("%s", "The variable has been deleted\n");
-            } else {
-                printf("%s", "Variable not found\n");
-            }
-            break;
-    }
-    return 0;
-}
 
 void mysh_start(char **args, int background) {
     int error = -1;
@@ -84,6 +31,48 @@ void mysh_start(char **args, int background) {
     } else {
         printf("New process PID : %d\n",pid);
     }
+}
+
+// Manage all environment variables commands
+int mysh_env(char * args[], int option) {
+    char **env_aux;
+    switch(option) {
+        case 0: // list variables
+            for(env_aux = environ; *env_aux != 0; env_aux ++) {
+                printf("%s\n", *env_aux);
+            }
+            break;
+        case 1: // set variable
+            if ((args[1] == NULL) && args[2] == NULL) {
+                printf("%s","Not enough input arguments\n");
+                return -1;
+            }
+            if (getenv(args[1]) != NULL) {
+                printf("%s", "The variable has been overwritten\n");
+            } else {
+                printf("%s", "The variable has been created\n");
+            }
+
+            if (args[2] == NULL) {
+                setenv(args[1], "", 1);
+            } else {
+                setenv(args[1], args[2], 1);
+            }
+            break;
+        case 2: // unset variable
+            if(args[1] == NULL) {
+                printf("%s","Missing arguments\n");
+                return -1;
+            }
+            if (getenv(args[1]) != NULL) {
+                unsetenv(args[1]);
+                printf("%s", "The variable has been deleted\n");
+            } else {
+                printf("%s", "Variable not found\n");
+            }
+            break;
+    }
+    return 0;
 }
 
 void mysh_IO(char * args[], char* inputFile, char* outputFile, int option) {
@@ -117,6 +106,19 @@ void mysh_IO(char * args[], char* inputFile, char* outputFile, int option) {
         }
     }
     waitpid(pid,NULL,0);
+}
+
+int mysh_cd(char* args[]) {
+    if (args[1] == NULL) {
+        chdir(getenv("HOME"));
+        return 1;
+    } else {
+        if (chdir(args[1]) == -1) {
+            printf(" %s: no such directory in file\n", args[1]);
+            return -1;
+        }
+    }
+    return 0;
 }
 
 void mysh_perriPiperHandler(char *args[]) {
@@ -222,16 +224,11 @@ void mysh_perriPiperHandler(char *args[]) {
     }
 }
 
-int commandHandler(char * args[]) {
-    int i = 0;
-    int j = 0;
-
+int mysh_commands(char * args[]) {
+    int i, j, background = 0;
     int fileDescriptor;
     int standardOut;
-
     int aux;
-    int background = 0;
-
     char *args_aux[256];
 
     while (args[j] != NULL) {
@@ -251,9 +248,7 @@ int commandHandler(char * args[]) {
         if (args[j] != NULL) {
             if ((strcmp(args[j],">") == 0) && (args[j+1] != NULL)) {
                 fileDescriptor = open(args[j+1], O_CREAT | O_TRUNC | O_WRONLY, 0600);
-                // We replace de standard output with the appropriate file
-                standardOut = dup(STDOUT_FILENO); 	// first we make a copy of stdout
-                // because we'll want it back
+                standardOut = dup(STDOUT_FILENO);
                 dup2(fileDescriptor, STDOUT_FILENO);
                 close(fileDescriptor);
                 printf("%s\n", getcwd(currentDirectory, 1024));
@@ -266,23 +261,23 @@ int commandHandler(char * args[]) {
         system("clear");
     } else if (strcmp(args[0],"cd") == 0) {
         mysh_cd(args);
-    } else if (strcmp(args[0],"environ") == 0) {
+    } else if (strcmp(args[0],"listenv") == 0) {
         if (args[j] != NULL) {
             if ((strcmp(args[j],">") == 0) && (args[j+1] != NULL)) {
                 fileDescriptor = open(args[j+1], O_CREAT | O_TRUNC | O_WRONLY, 0600);
                 standardOut = dup(STDOUT_FILENO);
                 dup2(fileDescriptor, STDOUT_FILENO);
                 close(fileDescriptor);
-                manageEnviron(args,0);
+                mysh_env(args, 0);
                 dup2(standardOut, STDOUT_FILENO);
             }
         } else {
-            manageEnviron(args,0);
+            mysh_env(args, 0);
         }
     } else if (strcmp(args[0],"setenv") == 0) {
-        manageEnviron(args, 1);
+        mysh_env(args, 1);
     } else if (strcmp(args[0],"unsetenv") == 0) {
-        manageEnviron(args,2);
+        mysh_env(args, 2);
     } else {
         while (args[i] != NULL && background == 0) {
             if (strcmp(args[i],"&") == 0) {
@@ -349,7 +344,7 @@ int main(int argc, char *argv[], char **env) {
         while ((tokens[numTokens] = strtok(NULL, " \n\t")) != NULL) {
             numTokens++;
         }
-        commandHandler(tokens);
+        mysh_commands(tokens);
     }
 
     exit(0);
