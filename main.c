@@ -131,7 +131,7 @@ void mysh_perriPiperHandler(char *args[]) {
 
     int error = -1;
 
-    int commandsNumber, end, i, j, l = 0;
+    int commandsNumber, end, i, j, k, l = 0;
 
     while (args[l] != NULL) {
         if (strcmp(args[l],"|") == 0) {
@@ -142,7 +142,7 @@ void mysh_perriPiperHandler(char *args[]) {
     commandsNumber++;
 
     while (args[j] != NULL && end != 1) {
-        int k = 0;
+        k = 0;
 
         while (strcmp(args[j],"|") != 0) {
             command[k] = args[j];
@@ -235,7 +235,6 @@ int mysh_commands(char * args[]) {
         if ((strcmp(args[j],"<") == 0)
         || (strcmp(args[j],">") == 0)
         || (strcmp(args[j],"&") == 0)) {
-            printf("%s", "Not implemented, because it has never worked");
             break;
         }
         args_aux[j] = args[j];
