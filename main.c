@@ -12,7 +12,7 @@ void mysh_IO(char * args[], char* inputFile, char* outputFile, int option) {
     int error = -1;
     int fileDescriptor;
 
-    if ((pid=fork()) == -1) {
+    if ((pid = fork()) == -1) {
         printf("Child not created\n");
         return;
     }
@@ -31,53 +31,49 @@ void mysh_IO(char * args[], char* inputFile, char* outputFile, int option) {
             close(fileDescriptor);
         }
 
-        setenv("parent",getcwd(currentDirectory, 1024),1);
+        setenv("parent", getcwd(currentDirectory, 1024), 1);
 
         if (execvp(args[0],args) == error) {
             printf("error");
             kill(getpid(),SIGTERM);
         }
     }
-    waitpid(pid,NULL,0);
+    waitpid(pid, NULL, 0);
 }
 
 int mysh_env(char * args[], int option) {
     char **env_aux;
-    switch(option) {
-        case 0:
-            for(env_aux = environ; *env_aux != 0; env_aux ++) {
-                printf("%s\n", *env_aux);
-            }
-            break;
-        case 1:
-            if ((args[1] == NULL) && args[2] == NULL) {
-                printf("%s","Not enough input arguments\n");
-                return -1;
-            }
-            if (getenv(args[1]) != NULL) {
-                printf("%s", "The variable has been overwritten\n");
-            } else {
-                printf("%s", "The variable has been created\n");
-            }
+    if (option == 0) {
+        for(env_aux = environ; *env_aux != 0; env_aux ++) {
+            printf("%s\n", *env_aux);
+        }
+    } else if (option == 1) {
+        if ((args[1] == NULL) && args[2] == NULL) {
+            printf("%s","Not enough input arguments\n");
+            return -1;
+        }
+        if (getenv(args[1]) != NULL) {
+            printf("%s", "The variable has been overwritten\n");
+        } else {
+            printf("%s", "The variable has been created\n");
+        }
 
-            if (args[2] == NULL) {
-                setenv(args[1], "", 1);
-            } else {
-                setenv(args[1], args[2], 1);
-            }
-            break;
-        case 2:
-            if(args[1] == NULL) {
-                printf("%s","Missing arguments\n");
-                return -1;
-            }
-            if (getenv(args[1]) != NULL) {
-                unsetenv(args[1]);
-                printf("%s", "The variable has been deleted\n");
-            } else {
-                printf("%s", "Variable not found\n");
-            }
-            break;
+        if (args[2] == NULL) {
+            setenv(args[1], "", 1);
+        } else {
+            setenv(args[1], args[2], 1);
+        }
+    } else if (option == 2) {
+        if(args[1] == NULL) {
+            printf("%s","Missing arguments\n");
+            return -1;
+        }
+        if (getenv(args[1]) != NULL) {
+            unsetenv(args[1]);
+            printf("%s", "The variable has been deleted\n");
+        } else {
+            printf("%s", "Variable not found\n");
+        }
     }
     return 0;
 }
