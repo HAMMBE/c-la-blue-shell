@@ -88,7 +88,7 @@ void mysh_start(char **args, int background) {
 
     if (pid == 0) {
         signal(SIGINT, SIG_IGN);
-        setenv("parent",getcwd(currentDirectory, 1024),1);
+        setenv("parent",getcwd(currentDirectory, 1024), 1);
         if (execvp(args[0],args) == error) {
             printf("Command not exist");
             kill(getpid(),SIGTERM);
@@ -116,8 +116,7 @@ int mysh_cd(char* args[]) {
 }
 
 void mysh_perriPiperHandler(char *args[]) {
-    int filedes[2];
-    int filedes2[2];
+    int filedes[2], filedes2[2];
 
     char *command[256];
 
