@@ -349,32 +349,13 @@ int mysh_commands(char *args[]) {
     return 1;
 }
 
-void konami() {
-    const int UP_ARROW = 65;
-    const int DOWN_ARROW = 66;
-    const int RIGHT_ARROW = 67;
-    const int LEFT_ARROW = 68;
-
-    int input;
-    int steps = 0;
-    int konamiCode[] = {UP_ARROW, UP_ARROW, DOWN_ARROW, DOWN_ARROW, LEFT_ARROW, RIGHT_ARROW, LEFT_ARROW, RIGHT_ARROW, 'b', 'a'};
-    input = getch();
-    if (input == konamiCode[steps]) {
-        steps++;
-    } else {
-        steps = 0;
-    }
-
-    if (steps == 10) {
-        printf("Konami code activated!\n");
-        steps = 0;
-    }
-}
-
 int main(int argc, char *argv[], char **env) {
     char line[MAXCHARPERLINE];
     char *tokens[TOKENMAX];
     int numTokens;
+
+    int konamiIndex = 0;
+    const char *konamiCode[10] = { "u", "u", "d", "d", "l", "r", "l", "r", "b", "a" };
 
     no_reprint_prmpt = 0;
     pid = -10;
@@ -403,8 +384,15 @@ int main(int argc, char *argv[], char **env) {
             numTokens++;
         }
 
-        // Konami
-        konami();
+        if (strcmp(tokens[0], konamiCode[konamiIndex]) == 0) {
+            konamiIndex++;
+            if (konamiIndex == 10) {
+                printf("Konami Code activated!\n");
+                konamiIndex = 0;
+            }
+        } else {
+            konamiIndex = 0;
+        }
 
         mysh_commands(tokens);
     }
