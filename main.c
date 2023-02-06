@@ -324,7 +324,6 @@ void saveHistory(char line[MAXCHARPERLINE]) {
     historyFile = fopen("history.txt", "a");
 
     memset(line, '\0', MAXCHARPERLINE);
-    fgets(line, MAXCHARPERLINE, stdin);
     fprintf(historyFile, "%s", line);
     fflush(historyFile);
 
