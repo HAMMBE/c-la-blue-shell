@@ -225,6 +225,10 @@ void mysh_perriPiperHandler(char *args[]) {
 
 void saveHistory(char line[MAXCHARPERLINE]) {
     line[strlen(line) - 1] = '\0';
+    if (strlen(line) == 0 || strspn(line, " ") == strlen(line)) {
+        return;
+    }
+
     // History
     FILE *historyFile = fopen(HISTORY_FILE, "a");
 
