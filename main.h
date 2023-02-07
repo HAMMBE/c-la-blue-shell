@@ -6,5 +6,4 @@
 
 static char* currentDirectory;
 extern char** environ;
-int no_reprint_prmpt;
 pid_t pid;

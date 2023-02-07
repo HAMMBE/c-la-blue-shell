@@ -8,8 +8,6 @@
 #include <fcntl.h>
 #include "main.h"
 
-void saveHistory(char line[1024]);
-
 void mysh_IO(char * args[], char* inputFile, char* outputFile, int option) {
     int error = -1;
     int fileDescriptor;
@@ -37,7 +35,7 @@ void mysh_IO(char * args[], char* inputFile, char* outputFile, int option) {
 
         if (execvp(args[0],args) == error) {
             printf("error");
-            kill(getpid(),SIGTERM);
+            kill(getpid(), SIGTERM);
         }
     }
     waitpid(pid, NULL, 0);
@@ -118,7 +116,8 @@ int mysh_cd(char* args[]) {
 }
 
 void mysh_perriPiperHandler(char *args[]) {
-    int filedes[2], filedes2[2];
+    int filedes[2];
+    int filedes2[2];
 
     char *command[256];
 
@@ -126,10 +125,15 @@ void mysh_perriPiperHandler(char *args[]) {
 
     int error = -1;
 
-    int commandsNumber, end, i, j, l = 0;
+    int commandsNumber = 0;
+    int end = 0;
+    int i = 0;
+    int j = 0;
+    int l = 0;
+    int k = 0;
 
     while (args[l] != NULL) {
-        if (strcmp(args[l],"|") == 0) {
+        if (strcmp(args[l], "|") == 0) {
             commandsNumber++;
         }
         l++;
@@ -137,9 +141,9 @@ void mysh_perriPiperHandler(char *args[]) {
     commandsNumber++;
 
     while (args[j] != NULL && end != 1) {
-        int k = 0;
+        k = 0;
 
-        while (strcmp(args[j],"|") != 0) {
+        while (strcmp(args[j], "|") != 0) {
             command[k] = args[j];
             j++;
             if (args[j] == NULL) {
@@ -277,9 +281,9 @@ int mysh_commands(char *args[]) {
         showHistory();
     } else if (strcmp(args[0], "clearHistory") == 0) {
         clearHistory();
-    } else if (strcmp(args[0],"exit") == 0 || strcmp(args[0],":qa") == 0) {
+    } else if (strcmp(args[0], "exit") == 0) {
         exit(0);
-    } else if (strcmp(args[0],"pwd") == 0) {
+    } else if (strcmp(args[0], "pwd") == 0) {
         if (args[j] != NULL) {
             if ((strcmp(args[j],">") == 0) && (args[j+1] != NULL)) {
                 fileDesc = open(args[j + 1], O_CREAT | O_TRUNC | O_WRONLY, 0600);
@@ -292,13 +296,13 @@ int mysh_commands(char *args[]) {
         } else {
             printf("%s\n", getcwd(currentDirectory, 1024));
         }
-    } else if (strcmp(args[0],"clear") == 0) {
+    } else if (strcmp(args[0], "clear") == 0) {
         system("clear");
-    } else if (strcmp(args[0],"cd") == 0) {
+    } else if (strcmp(args[0], "cd") == 0) {
         mysh_cd(args);
-    } else if (strcmp(args[0],"listenv") == 0) {
+    } else if (strcmp(args[0], "listenv") == 0) {
         if (args[j] != NULL) {
-            if ((strcmp(args[j],">") == 0) && (args[j+1] != NULL)) {
+            if ((strcmp(args[j], ">") == 0) && (args[j+1] != NULL)) {
                 fileDesc = open(args[j + 1], O_CREAT | O_TRUNC | O_WRONLY, 0600);
                 stdOut = dup(STDOUT_FILENO);
                 dup2(fileDesc, STDOUT_FILENO);
@@ -309,31 +313,31 @@ int mysh_commands(char *args[]) {
         } else {
             mysh_env(args, 0);
         }
-    } else if (strcmp(args[0],"setenv") == 0) {
+    } else if (strcmp(args[0], "setenv") == 0) {
         mysh_env(args, 1);
-    } else if (strcmp(args[0],"unsetenv") == 0) {
+    } else if (strcmp(args[0], "unsetenv") == 0) {
         mysh_env(args, 2);
     } else {
         while (args[i] != NULL && isRunningBg == 0) {
-            if (strcmp(args[i],"&") == 0) {
+            if (strcmp(args[i], "&") == 0) {
                 isRunningBg = 1;
-            } else if (strcmp(args[i],"|") == 0) {
+            } else if (strcmp(args[i], "|") == 0) {
                 mysh_perriPiperHandler(args);
                 return 1;
-            } else if (strcmp(args[i],"<") == 0) {
+            } else if (strcmp(args[i], "<") == 0) {
                 aux = i + 1;
                 if (args[aux] == NULL || args[aux+1] == NULL || args[aux+2] == NULL) {
                     printf("Not enough input arguments\n");
                     return -1;
                 } else {
-                    if (strcmp(args[aux+1],">") != 0){
+                    if (strcmp(args[aux+1], ">") != 0){
                         printf("Usage: Expected '>' and found %s\n",args[aux+1]);
                         return -2;
                     }
                 }
                 mysh_IO(args_aux, args[i + 1], args[i + 3], 1);
                 return 1;
-            } else if (strcmp(args[i],">") == 0) {
+            } else if (strcmp(args[i], ">") == 0) {
                 if (args[i+1] == NULL) {
                     printf("Not enough input arguments\n");
                     return -1;
@@ -357,19 +361,15 @@ int main(int argc, char *argv[], char **env) {
     int konamiIndex = 0;
     const char *konamiCode[10] = { "u", "u", "d", "d", "l", "r", "l", "r", "b", "a" };
 
-    no_reprint_prmpt = 0;
     pid = -10;
     environ = env;
 
     setenv("shell",getcwd(currentDirectory, 1024), 1);
 
     while (TRUE) {
-        if (no_reprint_prmpt == 0) {
-            char hostn[1204] = "";
-            gethostname(hostn, sizeof(hostn));
-            printf("%s@%s %s > ", getenv("LOGNAME"), hostn, getcwd(currentDirectory, 1024));
-        }
-        no_reprint_prmpt = 0;
+        char hostn[1204] = "";
+        gethostname(hostn, sizeof(hostn));
+        printf("%s@%s %s > ", getenv("LOGNAME"), hostn, getcwd(currentDirectory, 1024));
 
         memset(line, '\0', MAXCHARPERLINE);
         fgets(line, MAXCHARPERLINE, stdin);
@@ -382,16 +382,6 @@ int main(int argc, char *argv[], char **env) {
         numTokens = 1;
         while ((tokens[numTokens] = strtok(NULL, " \n\t")) != NULL) {
             numTokens++;
-        }
-
-        if (strcmp(tokens[0], konamiCode[konamiIndex]) == 0) {
-            konamiIndex++;
-            if (konamiIndex == 10) {
-                printf("Konami Code activated!\n");
-                konamiIndex = 0;
-            }
-        } else {
-            konamiIndex = 0;
         }
 
         mysh_commands(tokens);
