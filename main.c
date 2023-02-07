@@ -365,8 +365,6 @@ int mysh_commands(char *args[]) {
     return 1;
 }
 
-#include <ncurses.h>
-
 int main(int argc, char *argv[], char **env) {
     char line[MAXCHARPERLINE];
     char *tokens[TOKENMAX];
@@ -380,43 +378,26 @@ int main(int argc, char *argv[], char **env) {
 
     setenv("shell",getcwd(currentDirectory, 1024), 1);
 
-    initscr(); // Initialise ncurses
-    noecho();  // Désactive l'affichage des entrées clavier
-    cbreak();  // Désactive le buffering des entrées clavier
-
     while (TRUE) {
         char hostn[1204] = "";
         gethostname(hostn, sizeof(hostn));
-        printw("%s@%s %s > ", getenv("LOGNAME"), hostn, getcwd(currentDirectory, 1024));
+        printf("%s@%s %s > ", getenv("LOGNAME"), hostn, getcwd(currentDirectory, 1024));
 
-        int c = getch();
-        if (c == KEY_UP) {
-            printf("%s", "SAUTE\n")
-        } else if (c == KEY_DOWN) {
-            // Traitement de la flèche vers le bas
-        } else if (c == KEY_LEFT) {
-            // Traitement de la flèche vers la gauche
-        } else if (c == KEY_RIGHT) {
-            // Traitement de la flèche vers la droite
-        } else {
-            memset(line, '\0', MAXCHARPERLINE);
-            getstr(line);
+        memset(line, '\0', MAXCHARPERLINE);
+        fgets(line, MAXCHARPERLINE, stdin);
 
-            saveHistory(line);
+        saveHistory(line);
 
-            if ((tokens[0] = strtok(line," \n\t")) == NULL) {
-                continue;
-            }
-
-            numTokens = 1;
-            while ((tokens[numTokens] = strtok(NULL, " \n\t")) != NULL) {
-                numTokens++;
-            }
-
-            mysh_commands(tokens);
+        if ((tokens[0] = strtok(line," \n\t")) == NULL) {
+            continue;
         }
-    }
 
-    endwin(); // Désactive ncurses
+        numTokens = 1;
+        while ((tokens[numTokens] = strtok(NULL, " \n\t")) != NULL) {
+            numTokens++;
+        }
+
+        mysh_commands(tokens);
+    }
     exit(0);
 }
