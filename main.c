@@ -229,8 +229,10 @@ void saveHistory(char line[MAXCHARPERLINE]) {
         return;
     }
 
-    // History
-    FILE *historyFile = fopen(HISTORY_FILE, "a");
+    char filePath[1024];
+    sprintf(filePath, "%s/%s", getenv("HOME"), HISTORY_FILE);
+
+    FILE *historyFile = fopen(filePath, "a");
 
     if (historyFile == NULL) {
         printf("Error: Could not open history file\n");
@@ -242,7 +244,10 @@ void saveHistory(char line[MAXCHARPERLINE]) {
 }
 
 void showHistory() {
-    FILE *historyFile = fopen(HISTORY_FILE, "r");
+    char filePath[1024];
+    sprintf(filePath, "%s/%s", getenv("HOME"), HISTORY_FILE);
+
+    FILE *historyFile = fopen(filePath, "r");
     char historyLine[MAXCHARPERLINE];
     int lineNumber = 1;
     while (fgets(historyLine, MAXCHARPERLINE, historyFile) != NULL) {
@@ -253,7 +258,10 @@ void showHistory() {
 }
 
 void clearHistory() {
-    FILE *historyFile = fopen(HISTORY_FILE, "w");
+    char filePath[1024];
+    sprintf(filePath, "%s/%s", getenv("HOME"), HISTORY_FILE);
+
+    FILE *historyFile = fopen(filePath, "w");
     if (historyFile == NULL) {
         perror("Error opening file");
         exit(1);
@@ -377,6 +385,7 @@ int main(int argc, char *argv[], char **env) {
 
         memset(line, '\0', MAXCHARPERLINE);
         fgets(line, MAXCHARPERLINE, stdin);
+
         saveHistory(line);
 
         if ((tokens[0] = strtok(line," \n\t")) == NULL) {
