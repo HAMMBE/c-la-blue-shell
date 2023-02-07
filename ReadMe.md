@@ -15,6 +15,7 @@ MyShell is a shell written in C by leo Seguin & Benjamin Hamm.
 - `pwd` : Display the current directory
 - `exit` : Exit the shell
 - `clear` : Clear the terminal
+- `uuddlrlrba` : Konami code
 
 ### Redirections :
 

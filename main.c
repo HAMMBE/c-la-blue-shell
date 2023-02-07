@@ -289,7 +289,10 @@ int mysh_commands(char *args[]) {
         j++;
     }
 
-    if (strcmp(args[0], "history") == 0) {
+    if (strcmp(args[j], "uuddlrlrba") == 0) {
+        printf("You have entered the Konami Code! GG!\n");
+        return 1;
+    } else if (strcmp(args[0], "history") == 0) {
         showHistory();
     } else if (strcmp(args[0], "clearHistory") == 0) {
         clearHistory();
