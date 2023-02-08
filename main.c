@@ -289,9 +289,8 @@ int mysh_commands(char *args[]) {
         j++;
     }
 
-    if (strcmp(args[j], "uuddlrlrba") == 0) {
+    if (strcmp(args[0], "uuddlrlrba") == 0) {
         printf("You have entered the Konami Code! GG!\n");
-        return 1;
     } else if (strcmp(args[0], "history") == 0) {
         showHistory();
     } else if (strcmp(args[0], "clearHistory") == 0) {
@@ -372,9 +371,6 @@ int main(int argc, char *argv[], char **env) {
     char line[MAXCHARPERLINE];
     char *tokens[TOKENMAX];
     int numTokens;
-
-    int konamiIndex = 0;
-    const char *konamiCode[10] = { "u", "u", "d", "d", "l", "r", "l", "r", "b", "a" };
 
     pid = -10;
     environ = env;
